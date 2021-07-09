@@ -9,36 +9,36 @@ import (
 	"strconv"
 )
 
-type FirstApi struct {
+type SecondApi struct {
 	url         string
 	method      string
 	contentType ContentType
 }
 
-func (rcv FirstApi) GetURL() string {
+func (rcv SecondApi) GetURL() string {
 	return rcv.url
 }
 
-type firstApiRequest struct {
-	SourceAddress string    `json:"contact address"`
-	DestAddress   string    `json:"warehouse address"`
-	BoxDimensions []float64 `json:"package dimensions"`
+type secondApiRequest struct {
+	SourceAddress string    `json:"consignee"`
+	DestAddress   string    `json:"consignor"`
+	BoxDimensions []float64 `json:"cartons"`
 }
 
-type firstApiResponse struct {
-	Total interface{} `json:"total" xml:"total"`
+type secondApiResponse struct {
+	Amount interface{} `json:"amount" xml:"amount"`
 }
 
-func NewFirstApi() Resource {
-	return &FirstApi{
-		url:         "http://localhost:1111/",
+func NewSecondApi() Resource {
+	return &SecondApi{
+		url:         "http://localhost:2222/",
 		method:      "POST",
 		contentType: ApplicationJson,
 	}
 }
 
-func (rcv *FirstApi) GetAmount(data *Input, client http.Client) (float64, error) {
-	body, err := json.Marshal(rcv.encodeFirstApiRequest(data))
+func (rcv *SecondApi) GetAmount(data *Input, client http.Client) (float64, error) {
+	body, err := json.Marshal(rcv.encodeSecondApiRequest(data))
 	if err != nil {
 		return 0, fmt.Errorf("marshall body err: %s", err)
 	}
@@ -60,7 +60,7 @@ func (rcv *FirstApi) GetAmount(data *Input, client http.Client) (float64, error)
 		return 0, fmt.Errorf("response status code not OK: status: %s", rsp.Status)
 	}
 
-	var responseData firstApiResponse
+	var responseData secondApiResponse
 	switch rcv.contentType {
 	case ApplicationJson:
 		if err := json.NewDecoder(rsp.Body).Decode(&responseData); err != nil {
@@ -73,13 +73,13 @@ func (rcv *FirstApi) GetAmount(data *Input, client http.Client) (float64, error)
 	}
 
 	var amount float64
-	switch t := responseData.Total.(type) {
+	switch t := responseData.Amount.(type) {
 	case float64:
-		amount = responseData.Total.(float64)
+		amount = responseData.Amount.(float64)
 	case string:
-		amount, err = strconv.ParseFloat(responseData.Total.(string), 64)
+		amount, err = strconv.ParseFloat(responseData.Amount.(string), 64)
 		if err != nil {
-			return 0, fmt.Errorf("can't parse float | rsp:%s | err: %s", responseData.Total, err)
+			return 0, fmt.Errorf("can't parse float | rsp:%s | err: %s", responseData.Amount, err)
 		} else if amount == 0 {
 			return 0, fmt.Errorf("got amount: 0, so will not count as a real offer")
 		}
@@ -90,8 +90,8 @@ func (rcv *FirstApi) GetAmount(data *Input, client http.Client) (float64, error)
 	return amount, nil
 }
 
-func (rcv FirstApi) encodeFirstApiRequest(data *Input) firstApiRequest {
-	return firstApiRequest{
+func (rcv SecondApi) encodeSecondApiRequest(data *Input) secondApiRequest {
+	return secondApiRequest{
 		SourceAddress: data.SourceAddress,
 		DestAddress:   data.DestAddress,
 		BoxDimensions: data.BoxDimensions,

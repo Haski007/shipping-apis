@@ -1,0 +1,7 @@
+{
+  "source_address" : "Ireland",
+  "dest_address" : "Kiev",
+  "box_dimensions" : [
+    200.5, 100, 12
+  ]
+}
